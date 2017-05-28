@@ -19,7 +19,7 @@ class where_enumerator;
 template<typename T>
 class enumerator {
 public:
-    virtual T operator*() = 0; // Получает текущий элемент.
+    virtual const T& operator*() = 0; // Получает текущий элемент.
     virtual enumerator<T>& operator++() = 0;  // Переход к следующему элементу
     virtual operator bool() = 0;  // Возвращает true, если есть текущий элемент
 
@@ -65,7 +65,7 @@ public:
     std::vector<T> to_vector() {
         std::vector<T> ans;
         while ((bool)*this) {
-            ans.push_back(*(*this));
+            ans.push_back(std::move(*(*this)));
             ++(*this);
         }
 
@@ -75,7 +75,7 @@ public:
     template<typename Iter>
     void copy_to(Iter it) {
         while ((bool)*this) {
-            *it = *(*this);
+            *it = std::move(*(*this));
             it++;
             ++(*this);
         }
@@ -85,16 +85,16 @@ public:
 template<typename T, typename Iter>
 class range_enumerator : public enumerator<T> {
 public:
-    operator bool() {
+    operator bool() override {
         return begin_ != end_;
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         begin_++;
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         return *begin_; /// Safe or not safe, raise exception?
     }
 
@@ -116,16 +116,16 @@ public:
     drop_enumerator(enumerator<T> &parent, int count) : parent_(parent), count_(count) {
     }
 
-    operator bool() {
+    operator bool() override {
         return bool(parent_);
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         ++parent_;
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         while (count_ > 0 && bool(*this)) {
             ++parent_;
             count_--;
@@ -148,11 +148,11 @@ public:
             is_end_ = true;
     }
 
-    operator bool() {
+    operator bool() override {
         return !is_end_ && bool(parent_);
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         ++parent_;
         count_--;
         if (count_ == 0)
@@ -160,7 +160,7 @@ public:
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         return *parent_;
     }
 
@@ -176,17 +176,17 @@ public:
     select_enumerator(enumerator<U> &parent, F func) : parent_(parent), func_(func), is_calculated_(false) {
     }
 
-    operator bool() {
+    operator bool() override {
         return bool(parent_);
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         ++parent_;
         is_calculated_ = false;
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         if (!is_calculated_) {
             calculated_value_ = func_(*parent_);
             is_calculated_ = true;
@@ -209,18 +209,18 @@ public:
             is_end_ = true;
     }
 
-    operator bool() {
+    operator bool() override {
         return !is_end_ && bool(parent_);
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         ++parent_;
         if (predicate_(*parent_))
             is_end_ = true;
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         return *parent_;
     }
 
@@ -238,17 +238,17 @@ public:
             ++parent_;
     }
 
-    operator bool() {
+    operator bool() override {
         return bool(parent_);
     }
 
-    enumerator<T>& operator++() {
+    enumerator<T>& operator++() override {
         while (++parent_ && !predicate_(*parent_))
             ;
         return *this;
     }
 
-    T operator*() {
+    const T& operator*() override {
         return *parent_;
     }
 
