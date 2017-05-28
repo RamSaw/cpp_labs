@@ -114,6 +114,10 @@ template<typename T>
 class drop_enumerator : public enumerator<T> {
 public:
     drop_enumerator(enumerator<T> &parent, int count) : parent_(parent), count_(count) {
+        while (count_ > 0 && bool(*this)) {
+            ++parent_;
+            count_--;
+        }
     }
 
     operator bool() override {
@@ -126,10 +130,6 @@ public:
     }
 
     const T& operator*() override {
-        while (count_ > 0 && bool(*this)) {
-            ++parent_;
-            count_--;
-        }
         return *parent_;
     }
 
@@ -141,10 +141,8 @@ private:
 template<typename T>
 class take_enumerator : public enumerator<T> {
 public:
-    take_enumerator(enumerator<T> &parent, int count) : parent_(parent), count_(count) {
-        if (count_)
-            is_end_ = false;
-        else
+    take_enumerator(enumerator<T> &parent, int count) : parent_(parent), count_(count), is_end_(false) {
+        if (!count_)
             is_end_ = true;
     }
 
@@ -188,7 +186,7 @@ public:
 
     const T& operator*() override {
         if (!is_calculated_) {
-            calculated_value_ = func_(*parent_);
+            calculated_value_ = std::move(func_(*parent_));
             is_calculated_ = true;
         }
         return calculated_value_;
@@ -205,7 +203,7 @@ template<typename T, typename F>
 class until_enumerator : public enumerator<T> {
 public:
     until_enumerator(enumerator<T> &parent, F predicate) : parent_(parent), predicate_(predicate), is_end_(false) {
-        if (predicate_(*parent))
+        if (!parent_ || predicate_(*parent))
             is_end_ = true;
     }
 
@@ -215,7 +213,7 @@ public:
 
     enumerator<T>& operator++() override {
         ++parent_;
-        if (predicate_(*parent_))
+        if (parent_ && predicate_(*parent_)) /// No need for parent
             is_end_ = true;
         return *this;
     }

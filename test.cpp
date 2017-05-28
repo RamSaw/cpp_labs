@@ -110,6 +110,17 @@ TEST(until, until_predicate) {
     ASSERT_EQ(res, ans);
 }
 
+TEST(until, until_empty_input) {
+    std::vector<int> xs = {};
+    std::vector<int> res(3);
+    std::vector<int> ans = {0, 0, 0};
+
+    from(xs.begin(), xs.end())
+            .until([](int x) { return x % 3 != 0; })
+            .copy_to(res.begin());
+    ASSERT_EQ(res, ans);
+}
+
 TEST(until, until_neq) {
     std::vector<int> xs = {4, 4, 4, 2, 1};
     std::vector<int> ans = {4, 4, 4};
@@ -166,6 +177,28 @@ TEST(drop, drop) {
             .drop(0)
             .to_vector();
     ASSERT_EQ(res2, xs);
+}
+
+TEST(drop, drop_all) {
+    std::vector<int> xs = {1, 2, 3, 4, 4};
+    std::vector<int> ans = {};
+
+    std::vector<int> res = from(xs.begin(), xs.end())
+            .where_neq(4)
+            .drop(3)
+            .to_vector();
+    ASSERT_EQ(res, ans);
+}
+
+TEST(drop, drop_no) {
+    std::vector<int> xs = {};
+    std::vector<int> ans = {};
+
+    std::vector<int> res = from(xs.begin(), xs.end())
+            .where_neq(4)
+            .drop(0)
+            .to_vector();
+    ASSERT_EQ(res, ans);
 }
 
 TEST(where, where_predicate) {
