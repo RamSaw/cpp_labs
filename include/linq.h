@@ -41,11 +41,11 @@ public:
         return until_enumerator<T, F>(*this, func);
     }
 
-    auto until_eq(T value) {
+    auto until_eq(const T &value) {
         return until([value](T x) { return x == value; });
     }
 
-    auto until_neq(T value) {
+    auto until_neq(const T &value) {
         return until([value](T x) { return x != value; });
     }
 
@@ -54,11 +54,11 @@ public:
         return where_enumerator<T, F>(*this, func);
     }
 
-    auto where_eq(T value) {
+    auto where_eq(const T &value) {
         return where([value](T x) { return x == value; });
     }
 
-    auto where_neq(T value) {
+    auto where_neq(const T &value) {
         return where([value](T x) { return x != value; });
     }
 
@@ -171,7 +171,7 @@ private:
 template<typename T, typename U, typename F>
 class select_enumerator : public enumerator<T> {
 public:
-    select_enumerator(enumerator<U> &parent, F func) : parent_(parent), func_(func), is_calculated_(false) {
+    select_enumerator(enumerator<U> &parent, F &func) : parent_(parent), func_(std::move(func)), is_calculated_(false) {
     }
 
     operator bool() override {
@@ -202,7 +202,7 @@ private:
 template<typename T, typename F>
 class until_enumerator : public enumerator<T> {
 public:
-    until_enumerator(enumerator<T> &parent, F predicate) : parent_(parent), predicate_(predicate), is_end_(false) {
+    until_enumerator(enumerator<T> &parent, F &predicate) : parent_(parent), predicate_(std::move(predicate)), is_end_(false) {
         if (!parent_ || predicate_(*parent))
             is_end_ = true;
     }
@@ -231,7 +231,7 @@ private:
 template<typename T, typename F>
 class where_enumerator : public enumerator<T> {
 public:
-    where_enumerator(enumerator<T> &parent, F predicate) : parent_(parent), predicate_(predicate) {
+    where_enumerator(enumerator<T> &parent, F &predicate) : parent_(parent), predicate_(std::move(predicate)) {
         while (parent_ && !predicate_(*parent_))
             ++parent_;
     }
