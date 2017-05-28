@@ -21,7 +21,7 @@ class enumerator {
 public:
     virtual const T& operator*() = 0; // Получает текущий элемент.
     virtual enumerator<T>& operator++() = 0;  // Переход к следующему элементу
-    virtual operator bool() = 0;  // Возвращает true, если есть текущий элемент
+    virtual explicit operator bool() = 0;  // Возвращает true, если есть текущий элемент
 
     auto drop(int count) {
         return drop_enumerator<T>(*this, count);
@@ -85,7 +85,7 @@ public:
 template<typename T, typename Iter>
 class range_enumerator : public enumerator<T> {
 public:
-    operator bool() override {
+    explicit operator bool() override {
         return begin_ != end_;
     }
 
@@ -120,7 +120,7 @@ public:
         }
     }
 
-    operator bool() override {
+    explicit operator bool() override {
         return bool(parent_);
     }
 
@@ -146,7 +146,7 @@ public:
             is_end_ = true;
     }
 
-    operator bool() override {
+    explicit operator bool() override {
         return !is_end_ && bool(parent_);
     }
 
@@ -174,7 +174,7 @@ public:
     select_enumerator(enumerator<U> &parent, F &func) : parent_(parent), func_(std::move(func)), is_calculated_(false) {
     }
 
-    operator bool() override {
+    explicit operator bool() override {
         return bool(parent_);
     }
 
@@ -207,7 +207,7 @@ public:
             is_end_ = true;
     }
 
-    operator bool() override {
+    explicit operator bool() override {
         return !is_end_ && bool(parent_);
     }
 
@@ -236,7 +236,7 @@ public:
             ++parent_;
     }
 
-    operator bool() override {
+    explicit operator bool() override {
         return bool(parent_);
     }
 
